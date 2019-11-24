@@ -13,23 +13,32 @@ class NoteConsumer(WebsocketConsumer):
       self.channel_name
     )
     self.accept()
+    print("Connection Established")
 
   def disconnect(self, close_code):
     async_to_sync(self.channel_layer.group_discard)(
       self.room_group_name,
       self.channel_name
     )
+    print("Connection Disconnected")
+
   
   def receive(self, text_data):
+    print("Message recieved", text_data)
     text_data_json = json.loads(text_data)
     title = text_data_json['title']
     content = text_data_json['content']
-    id = text_data_json['id']
 
-    note = models.Note.objects.get(pk=id)
-    note.title = title 
-    note.content = content
-    note.save()
+    try:
+      id = text_data_json['id']
+      note = models.Note.objects.get(pk=id)
+      note.title = title 
+      note.content = content
+      note.save()
+    except:
+      note = models.Note(title=title, content=content)
+      note.save()
+      id = note.id
 
     async_to_sync(self.channel_layer.group_send)(
       self.room_group_name,

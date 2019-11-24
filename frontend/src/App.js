@@ -5,10 +5,11 @@ import ListNotes from './components/ListNotes';
 import AddNoteForm from './components/AddNoteForm';
 
 import { fetchNotes, fetchNote, updateNote, addNote } from './api';
-import Websocket from 'react-websocket';
 import EditNoteForm from './components/EditNoteForm';
 
 class App extends Component {
+  ws = new WebSocket('ws://127.0.0.1:8000/ws/notes')
+
   constructor(props) {
     super(props);
 
@@ -25,15 +26,25 @@ class App extends Component {
     this.getData = this.getData.bind(this);
     this.handleSaveNote = this.handleSaveNote.bind(this);
     this.handleOnChange = this.handleOnChange.bind(this);
+    this.sendData = this.sendData.bind(this);
   }
 
   componentDidMount() {
     this.getData();
+    this.ws.onopen = () => {
+      // on connecting, do nothing but log it to the console
+      console.log('connected')
+    }
+    this.ws.onmessage = (message) => {
+      console.log(message);
+      this.getData()
+    };
   }
 
   async getData() {
     let data = await fetchNotes();
     this.setState({notes: data, is_fetching: false});
+    console.log("getData", this.state.notes)
   }
 
   async handleItemClick(id) {
@@ -61,11 +72,21 @@ class App extends Component {
 
   handleData(data) {
     let result = JSON.parse(data);
+    console.log("Message recieved")
 
     let current_note = this.state.note;
     if(current_note.id === result.id) {
       this.setState({note: result});
     }
+  }
+
+  sendData(data) {
+    console.log('Send Data')
+    let current_note = {
+      content: data.content,
+      title: data.title
+    }
+    this.ws.send(JSON.stringify(current_note));
   }
 
   handleOnChange(e) {
@@ -77,8 +98,7 @@ class App extends Component {
       note: current_note
     });
 
-    const socket = this.refs.socket;
-    socket.state.ws.send(JSON.stringify(current_note));
+    this.ws.send(JSON.stringify(current_note));
   }
 
   render() {
@@ -105,11 +125,9 @@ class App extends Component {
             <Col xs="8">
               {
                 this.state.is_creating ?
-                <AddNoteForm handleSave={this.handleSaveNote}/> :
+                <AddNoteForm handleSave={this.sendData}/> :
                 <EditNoteForm handleChange={this.handleOnChange} note={this.state.note}/>
               }
-              <Websocket ref="socket" url='ws://127.0.0.1:8000/ws/notes'
-              onMessage={this.handleData.bind(this)}/>
             </Col>
           </Row>
         </Container>
