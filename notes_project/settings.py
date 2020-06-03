@@ -37,9 +37,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    'Lawyer.apps.LawyerConfig',
+    'Client.apps.ClientConfig',
+    
     'corsheaders',
     'rest_framework',
+    'rest_framework.authtoken',  # <-- Here
+
     'channels',
 
     'notes',
@@ -61,6 +65,20 @@ CORS_ORIGIN_WHITELIST = (
 )
 
 ROOT_URLCONF = 'notes_project.urls'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+    'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%S.%fZ",
+
+}
 
 TEMPLATES = [
     {
@@ -136,7 +154,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+            "hosts": [('redis://:kemdis+emYcOw;iBGIMP4n7iPev@173.82.119.23:6379')],
         },
     },
 }
