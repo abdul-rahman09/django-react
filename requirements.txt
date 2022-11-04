@@ -19,6 +19,6 @@ pkg-resources==0.0.0
 pytz==2018.4
 redis==2.10.6
 six==1.11.0
-Twisted==17.9.0
+Twisted==22.10.0
 txaio==2.10.0
 zope.interface==4.7.1
